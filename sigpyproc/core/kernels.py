@@ -194,7 +194,7 @@ def invert_freq(array, nchans, nsamps):
 @njit(
     ["u1[:](u1[:], i4, i4)", "f4[:](f4[:], i4, i4)"],
     cache=True,
-    parallel=True,
+    parallel=False,
 )
 def invert_freq_BL(array, nchans, nsamps):
     n_fine_in_coarse = 256

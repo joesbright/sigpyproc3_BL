@@ -319,6 +319,36 @@ class Filterbank(ABC):
             out_file.cwrite(out_ar)
         out_file.close()
         return out_file.name
+    
+    def invert_freq_BL(self, filename: str = None, **plan_kwargs) -> str:
+        """Invert the frequency ordering of the data and write to a new file, taking into account first fine channel per coarse channel.
+
+        Parameters
+        ----------
+        filename : str, optional
+            name of output file, by default ``basename_inverted.fil``
+        **plan_kwargs : dict
+            Additional keyword arguments for :func:`read_plan`.
+
+        Returns
+        -------
+        str
+            name of output file
+        """
+        if filename is None:
+            filename = f"{self.header.basename}_inverted.fil"
+
+        changes = {
+            "fch1": self.header.fch1 + (self.header.nchans) * self.header.foff,
+            "foff": self.header.foff * -1,
+        }
+
+        out_file = self.header.prep_outfile(filename, changes, nbits=self.header.nbits)
+        for nsamp, _ii, data in self.read_plan(**plan_kwargs):
+            out_ar = kernels.invert_freq_BL(data, self.header.nchans, nsamp)
+            out_file.cwrite(out_ar)
+        out_file.close()
+        return out_file.name    
 
     def apply_channel_mask(
         self,

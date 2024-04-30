@@ -192,6 +192,36 @@ def invert_freq(array, nchans, nsamps):
 
 
 @njit(
+    ["u1[:](u1[:], i4, i4)", "f4[:](f4[:], i4, i4)"],
+    cache=True,
+    parallel=True,
+)
+def invert_freq_BL(array, nchans, nsamps):
+    n_fine_in_coarse = 256
+
+    outarray = np.empty_like(array)
+    tmp_array = np.empty_like(array)
+
+    for isamp in range(nsamps):
+        for ichan in range(nchans):
+            if ichan % n_fine_in_coarse == (n_fine_in_coarse - 1):
+                tmp_array[nchans * isamp + ichan] = array[
+                    nchans * isamp + ichan - (n_fine_in_coarse - 1)
+                ]
+            else:
+                tmp_array[nchans * isamp + ichan] = array[
+                    nchans * isamp + ichan + 1
+                ]
+
+    for isamp in range(nsamps):
+        for ichan in range(nchans):
+            outarray[nchans * isamp + ichan] = tmp_array[
+                nchans * isamp + (nchans - ichan - 1)
+            ]
+    return outarray
+
+
+@njit(
     [
         "void(u1[:], f4[:], i4[:], i4[:], i4, i4, i4, i4)",
         "void(f4[:], f4[:], i4[:], i4[:], i4, i4, i4, i4)",
